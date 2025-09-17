@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { 
-  doc, setDoc, serverTimestamp, updateDoc, increment, 
-  collection, query, where, getDocs, getDoc 
-} from "firebase/firestore";
+import { doc, setDoc, serverTimestamp, collection, query, where, getDocs, getDoc } from "firebase/firestore";
 import { db, auth } from "../../../firebase/firebaseConfig";
 import { v4 as uuidv4 } from "uuid";
+import { motion } from "framer-motion";
 
 export default function TukarPoinCard({ reward }) {
   const user = auth.currentUser;
@@ -21,46 +19,28 @@ export default function TukarPoinCard({ reward }) {
   };
 
   const handleRedeem = async () => {
-    if (!user) {
-      alert("Login dulu untuk menukar poin");
-      return;
-    }
+    if (!user) return alert("Login dulu untuk menukar poin");
 
     try {
-      // 🔹 Ambil data user
-      const userRef = doc(db, "users", user.uid);
-      const userSnap = await getDoc(userRef);
-
-      if (!userSnap.exists()) {
-        alert("Data user tidak ditemukan");
-        return;
-      }
+      const userSnap = await getDoc(doc(db, "users", user.uid));
+      if (!userSnap.exists()) return alert("Data user tidak ditemukan");
 
       const userData = userSnap.data();
 
-      // 🔹 Cek transaksi pending
-      const q = query(
-        collection(db, "redeem"),
-        where("userId", "==", user.uid),
-        where("status", "==", "pending")
+      const pendingSnap = await getDocs(
+        query(
+          collection(db, "redeem"),
+          where("userId", "==", user.uid),
+          where("status", "==", "pending")
+        )
       );
-      const pendingSnap = await getDocs(q);
-      if (!pendingSnap.empty) {
-        alert("Silakan tunggu transaksi Anda Sebelumnya");
-        return;
-      }
 
-      // 🔹 Cek poin cukup
-      if (userData.poin < reward.poin) {
-        alert("Poin kamu tidak cukup");
-        return;
-      }
+      if (!pendingSnap.empty) return alert("Silakan tunggu transaksi sebelumnya");
+      if (userData.poin < reward.poin) return alert("Poin kamu tidak cukup");
 
-      // 🔹 Lanjut bikin transaksi setelah isi form
       setShowForm(true);
-
     } catch (error) {
-      console.error("Error cek user:", error);
+      console.error(error);
       alert("Terjadi kesalahan, coba lagi.");
     }
   };
@@ -68,8 +48,6 @@ export default function TukarPoinCard({ reward }) {
   const handleSubmitForm = async () => {
     try {
       const transaksiId = uuidv4();
-
-      // Buat dokumen redeem
       await setDoc(doc(db, "redeem", transaksiId), {
         userId: user.uid,
         rewardId: reward.id,
@@ -80,60 +58,52 @@ export default function TukarPoinCard({ reward }) {
         createdAt: serverTimestamp(),
       });
 
-      // Kurangi poin user
-      const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, {
-        poin: increment(-reward.poin),
-      });
-
       alert("Penukaran berhasil diajukan! Menunggu verifikasi admin.");
       setShowForm(false);
       setFormData({ nama: "", nohp: "", bank: "", norek: "" });
-
     } catch (error) {
-      console.error("Error redeem:", error);
+      console.error(error);
       alert("Gagal menukar poin, coba lagi.");
     }
   };
 
-
   return (
     <>
-      {/* Card Reward */}
-      <div
-        className="w-full max-w-[320px] aspect-[16/9]
-                   bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-700
-                   rounded-2xl shadow-lg overflow-hidden 
-                   flex flex-col justify-between 
-                   p-4 sm:p-5 text-white
-                   transition-transform duration-300 
-                   hover:scale-[1.05] hover:shadow-2xl"
+      <motion.div
+        initial={{ opacity: 0, y: 30 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-[300px] sm:max-w-[320px] md:max-w-[350px]"
       >
-        {/* Bagian Atas */}
-        <div className="space-y-1">
-          <h3 className="text-base sm:text-lg md:text-xl font-bold drop-shadow">
-            {reward.nama}
-          </h3>
-          <p className="text-xs sm:text-sm md:text-base opacity-90">
-            {reward.poin} Poin
-          </p>
-        </div>
+        <div
+          className="h-44 sm:h-48 md:h-52 rounded-2xl shadow-lg overflow-hidden relative
+                     flex flex-col justify-between p-4 text-white
+                     transition-transform duration-300 hover:scale-105 hover:shadow-2xl bg-cover bg-center"
+          style={{ backgroundImage: `url(${reward.imageUrl})` }}
+        >
+          {/* Overlay */}
+          <div className="absolute inset-0 bg-black bg-opacity-30 rounded-2xl"></div>
 
-        {/* Bagian Bawah */}
-        <div className="flex justify-end">
-          <button
-            onClick={handleRedeem}
-            className="bg-white text-yellow-700 font-semibold 
-                       px-3 sm:px-4 py-1 sm:py-1.5 
-                       rounded-lg text-xs sm:text-sm md:text-base 
-                       shadow-md hover:bg-gray-100 transition"
-          >
-            Tukar
-          </button>
-        </div>
-      </div>
+          {/* Konten */}
+          <div className="relative z-10 flex flex-col justify-between h-full">
+            <div>
+              <h3 className="text-lg sm:text-xl font-semibold truncate">{reward.nama}</h3>
+              <p className="text-sm sm:text-base font-bold mt-1">{reward.poin} Poin</p>
+            </div>
 
-      {/* Modal Form Penukaran */}
+            <div className="flex justify-end">
+              <button
+                onClick={handleRedeem}
+                className="bg-white text-yellow-700 font-semibold px-4 py-1 rounded-lg text-sm shadow hover:bg-gray-100 transition"
+              >
+                Tukar
+              </button>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Modal Form */}
       {showForm && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50 px-4">
           <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-md">
@@ -177,15 +147,13 @@ export default function TukarPoinCard({ reward }) {
             <div className="flex flex-col sm:flex-row justify-between gap-2">
               <button
                 onClick={handleSubmitForm}
-                className="flex-1 bg-green-600 hover:bg-green-700 
-                           text-white px-4 py-2 rounded-lg"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
               >
                 Kirim
               </button>
               <button
                 onClick={() => setShowForm(false)}
-                className="flex-1 bg-gray-500 hover:bg-gray-600 
-                           text-white px-4 py-2 rounded-lg"
+                className="flex-1 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
               >
                 Batal
               </button>

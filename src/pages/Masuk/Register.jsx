@@ -9,7 +9,7 @@ import {
   getRedirectResult,
   sendEmailVerification,
 } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Register() {
   const [nama, setNama] = useState("");
@@ -125,9 +125,9 @@ export default function Register() {
 
         <div className="text-center text-sm text-gray-600 mt-4">
           Sudah punya akun?{" "}
-          <a href="/Login" className="text-yellow-600 hover:underline">
+          <Link to="/Login" className="text-yellow-600 hover:underline">
             Masuk di sini
-          </a>
+          </Link>
         </div>
 
         <div className="mt-6 flex items-center justify-center">

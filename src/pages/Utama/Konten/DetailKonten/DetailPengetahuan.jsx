@@ -144,8 +144,11 @@ const DetailPengetahuan = () => {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
-          dangerouslySetInnerHTML={{ __html: pengetahuan.kontenPengetahuan }}
-        />
+          >
+          {pengetahuan.kontenPengetahuan.split("\n").map((line, i) => (
+          <p key={i}>{line}</p>
+         ))}
+       < /motion.div>
 
         {/* Tombol aksi */}
         <div className="mt-10 flex justify-between relative">

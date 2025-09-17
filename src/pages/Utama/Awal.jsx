@@ -4,7 +4,7 @@ import AOS from "aos";
 import "aos/dist/aos.css";
 import { FiBookOpen, FiGlobe, FiClock } from "react-icons/fi";
 import { Link } from "react-router-dom";
-
+import Adsterra from "../../components/Adsterra";
 import Sidebar from "../../components/Awal/Sidebar";
 import Topbar from "../../components/Awal/Topbar";
 
@@ -73,6 +73,7 @@ const Awal = () => {
                     pandang yang jujur dan terverifikasi.
                   </p>
                 </div>
+                <Adsterra show={["ad-2", "ad-5"]} />
               </Link>
             </div>
           </div>

@@ -173,13 +173,14 @@ export default function AdminBerita() {
           </div>
 
           <textarea
-            value={kontenBerita}
-            onChange={(e) => setKontenBerita(e.target.value)}
-            placeholder="Isi berita"
-            className="w-full border p-2 rounded"
-            rows={4}
-            required
-          />
+             value={kontenBerita}
+             onChange={(e) => setKontenBerita(e.target.value)}
+             placeholder="Isi berita"
+             className="w-full border p-2 rounded"
+             rows={4}
+             required
+              />
+
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <input

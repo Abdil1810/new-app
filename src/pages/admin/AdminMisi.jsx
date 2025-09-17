@@ -20,6 +20,7 @@ const AdminMisi = () => {
     deskripsi: "",
     poin: "",
     gambarMisi: "",
+    imageUrl: "",
     poinMisi: "",
     durasi: "",
     targetType: "",
@@ -58,6 +59,7 @@ const AdminMisi = () => {
       deskripsi: newMisi.deskripsi,
       poin: Number(newMisi.poin),
       gambarMisi: (newMisi.gambarMisi),
+      imageUrl: (newMisi.imageUrl),
       poinMisi: Number(newMisi.poinMisi),
       durasi: Number(newMisi.durasi),
       targetType: newMisi.targetType,
@@ -78,6 +80,7 @@ const AdminMisi = () => {
       deskripsi: "",
       poin: 0,
       gambarMisi: "",
+      imageUrl: "",
       poinMisi: 0,
       durasi: 0,
       targetType: "",
@@ -96,36 +99,36 @@ const AdminMisi = () => {
     fetchMisi();
   };
 
-  // Update misi
+// Update misi
 const handleUpdate = async () => {
   if (!editMisi) return;
 
   const ref = doc(db, "missions", editMisi.id);
 
-  // Validasi tanggal
-  const mulaiDate = new Date(editMisi.tanggalMulai);
-  const selesaiDate = new Date(editMisi.tanggalSelesai);
+  // Konversi tanggal
+  const tanggalMulai = editMisi.tanggalMulai && !isNaN(new Date(editMisi.tanggalMulai))
+    ? Timestamp.fromDate(new Date(editMisi.tanggalMulai))
+    : serverTimestamp();
+
+  const tanggalSelesai = editMisi.tanggalSelesai && !isNaN(new Date(editMisi.tanggalSelesai))
+    ? Timestamp.fromDate(new Date(editMisi.tanggalSelesai))
+    : serverTimestamp();
 
   await updateDoc(ref, {
     title: editMisi.title,
     judul: editMisi.judul,
     deskripsi: editMisi.deskripsi,
     poin: Number(editMisi.poin),
-    gambarMisi: (newMisi.gambarMisi),
+    gambarMisi: editMisi.gambarMisi,
+    imageUrl: editMisi.imageUrl,
     poinMisi: Number(editMisi.poinMisi),
     durasi: Number(editMisi.durasi),
     targetType: editMisi.targetType,
     idBerita: editMisi.idBerita,
     idPengetahuan: editMisi.idPengetahuan,
     idSejarah: editMisi.idSejarah,
-    tanggalMulai:
-      editMisi.tanggalMulai && !isNaN(mulaiDate)
-        ? Timestamp.fromDate(mulaiDate)
-        : serverTimestamp(),
-    tanggalSelesai:
-      editMisi.tanggalSelesai && !isNaN(selesaiDate)
-        ? Timestamp.fromDate(selesaiDate)
-        : serverTimestamp(),
+    tanggalMulai,
+    tanggalSelesai,
   });
 
   setEditMisi(null);
@@ -179,6 +182,13 @@ const handleUpdate = async () => {
           placeholder="url gambar"
           value={newMisi.gambarMisi}
           onChange={(e) => setNewMisi({ ...newMisi, gambarMisi: e.target.value })}
+          className="border p-2 w-full mb-2 rounded"
+        />
+        <input
+          type="text"
+          placeholder="Card Misi url"
+          value={newMisi.imageUrl}
+          onChange={(e) => setNewMisi({ ...newMisi, imageUrl: e.target.value })}
           className="border p-2 w-full mb-2 rounded"
         />
         <input

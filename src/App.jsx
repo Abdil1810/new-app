@@ -33,6 +33,7 @@ import AdminPengetahuan from "./pages/admin/AdminPengetahuan";
 import AdminSejarah from "./pages/admin/AdminSejarah";
 import AdminMisi from "./pages/admin/AdminMisi";
 import AdminUser from "./pages/admin/AdminUser";
+import AdminRedeem from "./pages/admin/AdminRedeem";
 
 // Map ukuran font ke class Tailwind
 const fontSizeMap = {
@@ -186,6 +187,7 @@ const AppContent = () => {
           <Route path="sejarah" element={<AdminSejarah />} />
           <Route path="misi" element={<AdminMisi />} />
           <Route path="user" element={<AdminUser />} />
+          <Route path="Redeem" element={<AdminRedeem />} />
         </Route>
       </Routes>
 

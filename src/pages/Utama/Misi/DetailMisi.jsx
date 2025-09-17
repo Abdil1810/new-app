@@ -6,10 +6,7 @@ import {
   getDoc,
   updateDoc,
   arrayUnion,
-  increment,
-  addDoc,
-  collection,
-  serverTimestamp,
+  onSnapshot,
 } from "firebase/firestore";
 import { db } from "../../../firebase/firebaseConfig";
 import { getAuth, onAuthStateChanged } from "firebase/auth";
@@ -62,142 +59,121 @@ const DetailMisi = () => {
     fetchMisi();
   }, [id]);
 
-  // cek progress user
+  // cek progress user realtime
   useEffect(() => {
     if (!idUser || !misi) return;
 
-    const cekProgress = async () => {
-      try {
-        const userRef = doc(db, "users", idUser);
-        const userSnap = await getDoc(userRef);
+    const userRef = doc(db, "users", idUser);
+    const unsub = onSnapshot(userRef, (snap) => {
+      if (snap.exists()) {
+        const data = snap.data();
+        const progress = data.progress?.[id];
+        const sudah = Array.isArray(data.misiSelesai)
+          ? data.misiSelesai.some((m) => m.missionId === id)
+          : false;
 
-        if (userSnap.exists()) {
-          const data = userSnap.data();
-          const progress = data.progress?.[id];
-          const sudah = data.misiSelesai?.includes(id);
-
-          if (sudah || progress?.selesai) {
-            setSudahSelesai(true);
-            return;
-          }
-
-          if (progress) {
-            const { startTime, durasi } = progress;
-            if (Date.now() - startTime >= durasi * 1000) {
-              setTombolAktif(true);
-            }
+        if (sudah || progress?.selesai) {
+          setSudahSelesai(true);
+          setTombolAktif(false);
+        } else if (progress) {
+          const { startTime, durasi } = progress;
+          if (Date.now() - startTime >= durasi * 1000) {
+            setTombolAktif(true);
           }
         }
-      } catch (err) {
-        console.error("Gagal cek progress:", err);
       }
-    };
-
-    cekProgress();
-  }, [idUser, id, misi]);
-
-// buka detail konten (berita / pengetahuan / sejarah)
-const handleGetStarted = async () => {
-  if (!idUser) {
-    toast.error("User belum login");
-    return;
-  }
-  if (!misi?.idBerita && !misi?.idPengetahuan && !misi?.idSejarah) {
-    toast.error("ID konten tidak ditemukan di misi ini");
-    return;
-  }
-
-  try {
-    const userRef = doc(db, "users", idUser);
-
-    // simpan progress user
-    await updateDoc(userRef, {
-      [`progress.${id}`]: {
-        startTime: Date.now(),
-        durasi: misi.durasi || 30,
-        selesai: false,
-      },
     });
 
-    // tentukan route berdasarkan field yang ada
-    let route = "";
-    if (misi.idBerita) {
-      route = `/utama/detailberita/${misi.idBerita}?from=mission&misi=${id}`;
-    } else if (misi.idPengetahuan) {
-      route = `/utama/detailpengetahuan/${misi.idPengetahuan}?from=mission&misi=${id}`;
-    } else if (misi.idSejarah) {
-      route = `/utama/detailsejarah/${misi.idSejarah}?from=mission&misi=${id}`;
-    } else {
-      toast.error("Misi tidak memiliki target konten");
+    return () => unsub();
+  }, [idUser, id, misi]);
+
+  // buka detail konten (berita / pengetahuan / sejarah)
+  const handleGetStarted = async () => {
+    if (!idUser) {
+      toast.error("User belum login");
       return;
     }
 
-    navigate(route);
-  } catch (err) {
-    console.error("Gagal memulai misi:", err);
-    toast.error("Gagal memulai misi");
-  }
-};
+    if (!misi?.id) {
+      toast.error("ID misi tidak ditemukan");
+      return;
+    }
 
-  // tandai selesai
+    try {
+      const userRef = doc(db, "users", idUser);
+
+      await updateDoc(userRef, {
+        [`progress.${misi.id}`]: {
+          startTime: Date.now(),
+          durasi: misi.durasi || 30,
+          selesai: false,
+        },
+      });
+
+      // tentukan route berdasarkan field yang ada
+      let route = "";
+      if (misi.idBerita) {
+        route = `/utama/detailberita/${misi.idBerita}?from=mission&misi=${id}`;
+      } else if (misi.idPengetahuan) {
+        route = `/utama/detailpengetahuan/${misi.idPengetahuan}?from=mission&misi=${id}`;
+      } else if (misi.idSejarah) {
+        route = `/utama/detailsejarah/${misi.idSejarah}?from=mission&misi=${id}`;
+      } else {
+        toast.error("Misi tidak memiliki target konten");
+        return;
+      }
+
+      navigate(route);
+    } catch (err) {
+      console.error("Gagal memulai misi:", err);
+      toast.error("Gagal memulai misi");
+    }
+  };
+
   const handleTandaiSelesai = async () => {
-    if (processing) return; // 🚫 cegah spam klik
+    if (processing) return;
     setProcessing(true);
 
     try {
-      if (sudahSelesai) {
-        toast.info("Misi ini sudah ditandai selesai");
-        setProcessing(false);
-        return;
-      }
-      if (!tombolAktif) {
-        toast.info("Selesaikan misi terlebih dahulu");
-        setProcessing(false);
-        return;
-      }
-      if (!idUser) {
-        toast.error("User belum login");
-        setProcessing(false);
-        return;
-      }
+      if (!idUser) throw new Error("User belum login");
 
       const userRef = doc(db, "users", idUser);
       const userSnap = await getDoc(userRef);
       if (!userSnap.exists()) throw new Error("User tidak ditemukan.");
 
       const userData = userSnap.data();
+      const misiSelesai = Array.isArray(userData.misiSelesai)
+        ? userData.misiSelesai
+        : [];
 
-      // 🚫 cek ulang biar aman
-      if (userData.misiSelesai?.includes(id)) {
+      // cek apakah misi ini sudah pernah ada di list
+      if (misiSelesai.some((m) => m.missionId === id)) {
         toast.info("Misi ini sudah pernah selesai");
-        setProcessing(false);
         return;
       }
 
-      // ✅ Update poin & misi selesai
+      if (!tombolAktif) {
+        toast.info("Selesaikan misi terlebih dahulu");
+        return;
+      }
+
+      // simpan sebagai object
       await updateDoc(userRef, {
-        poin: increment(misi.poinMisi || 0),
-        misiSelesai: arrayUnion(id),
+        misiSelesai: arrayUnion({
+          missionId: id,
+          approved: false, // default selalu pending
+          timestamp: Date.now(),
+        }),
         [`progress.${id}.selesai`]: true,
       });
 
-      // ✅ Tambah history
-      await addDoc(collection(db, "pointsHistory"), {
-        userId: idUser,
-        misiId: id,
-        poin: misi.poinMisi || 0,
-        timestamp: serverTimestamp(),
-        type: "mission_complete",
-      });
-
       setSudahSelesai(true);
-      toast.success(`Misi selesai! +${misi.poinMisi} poin`);
-      navigate("/awal");
+      toast.success("Misi selesai, menunggu persetujuan admin");
     } catch (err) {
       console.error(err);
-      toast.error("Gagal menandai selesai");
+      toast.error(err.message || "Gagal tandai selesai");
     } finally {
-      setProcessing(false); // 🔓 aktifkan tombol lagi
+      setProcessing(false);
     }
   };
 

@@ -139,13 +139,17 @@ const DetailBerita = () => {
         )}
 
         {/* Isi berita */}
-        <motion.div
-          className="prose prose-lg dark:prose-invert max-w-none leading-relaxed"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5 }}
-          dangerouslySetInnerHTML={{ __html: berita.kontenBerita }}
-        />
+        
+<motion.div
+  className="prose prose-lg dark:prose-invert max-w-none leading-relaxed"
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.5 }}
+>
+  {berita.kontenBerita.split("\n").map((line, i) => (
+    <p key={i}>{line}</p>
+  ))}
+</motion.div>
 
         {/* Tombol aksi */}
         <div className="mt-10 flex justify-between relative">

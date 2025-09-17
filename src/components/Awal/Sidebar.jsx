@@ -5,7 +5,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../firebase/firebaseConfig";
 
 const menuItems = [
-  { icon: <FiHome />, label: "Home", path: "/Awal" },
+  { icon: <FiHome />, label: "Home", path: "/Home" },
   { icon: <FiTarget />, label: "Misi", path: "/Misi" },
   { icon: <FiGift />, label: "Tukar Poin", path: "/TukarPoin" }, // <- nanti tambahin routingnya 
   { icon: <FiSettings />, label: "Pengaturan", path: "/Pengaturan" },

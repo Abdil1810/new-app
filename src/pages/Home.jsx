@@ -4,6 +4,7 @@ import { FiShield, FiUsers, FiBookOpen, FiTarget, FiFlag } from "react-icons/fi"
 import AOS from "aos";
 import "aos/dist/aos.css";
 import Header from "../components/landing/Header";
+import Adsterra from "../components/Adsterra";
 
 const Home = () => {
   useEffect(() => {
@@ -16,6 +17,7 @@ const Home = () => {
 	  
       {/* Hero Section */}
       <section className="flex flex-col justify-start pt-32 px-4 items-center bg-gradient-to-b from-yellow-100 to-white overflow-x-hidden">
+        <Adsterra show={["ad-2", "ad-3"]} />
         <h1 className="text-4xl md:text-5xl font-extrabold text-yellow-800 text-center mb-6">
           Selamat Datang di <span className="text-yellow-600">Dawnlessday</span>
         </h1>
@@ -23,12 +25,14 @@ const Home = () => {
           Portal informasi yang mengupas dunia dengan tajam, cerdas, dan berjiwa.
           Jelajahi berita, pengetahuan, dan sejarah dalam satu atap.
         </p>
+        
         <Link
           to="/Awal"
           className="bg-yellow-700 hover:bg-blue-800 text-white font-semibold py-3 px-6 rounded-full transition duration-300 shadow-md"
         >
           Login Untuk Memulai
         </Link>
+        
       </section>
 
       {/* Section: Kenapa Memilih Dawnlessday */}
@@ -55,6 +59,7 @@ const Home = () => {
             <p className="text-gray-600 text-sm">Tidak hanya berita — tapi juga wawasan mendalam dan reflektif.</p>
           </div>
         </div>
+        
       </section>
 
       {/* Section: Visi & Misi */}
@@ -86,6 +91,7 @@ const Home = () => {
             </ul>
           </div>
         </div>
+        <Adsterra show={["ad-5", "ad-1"]} />
       </section>
     </>
   );

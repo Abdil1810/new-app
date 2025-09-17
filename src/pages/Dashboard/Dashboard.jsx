@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { db, auth } from "../../firebase/firebaseConfig";
-import { doc, setDoc } from "firebase/firestore";
+import { doc, getDoc, setDoc, updateDoc } from "firebase/firestore";
 import { updateProfile } from "firebase/auth";
 
 const Dashboard = () => {
@@ -18,19 +18,29 @@ const Dashboard = () => {
       const user = auth.currentUser;
       if (!user) return;
 
-      // Simpan ke Firestore
       const userRef = doc(db, "users", user.uid);
-      await setDoc(userRef, {
-        displayName: nama,
-        phone: noHp,
-        email: user.email,
-        uid: user.uid,
-      });
+      const snap = await getDoc(userRef);
+
+      if (!snap.exists()) {
+        // kalau dokumen user belum ada → bikin dulu (admin biasanya)
+        await setDoc(userRef, {
+          uid: user.uid,
+          email: user.email,
+          role: "user",
+          displayName: nama,
+          phone: noHp,
+          progress: 0,
+        });
+      } else {
+        // kalau sudah ada → update field yang diizinin rules
+        await updateDoc(userRef, {
+          displayName: nama,
+          phone: noHp,
+        });
+      }
 
       // Update profil di auth (biar Topbar langsung ikut berubah)
-      await updateProfile(user, {
-        displayName: nama,
-      });
+      await updateProfile(user, { displayName: nama });
 
       navigate("/Awal");
     } catch (error) {

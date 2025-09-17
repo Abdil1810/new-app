@@ -8,7 +8,7 @@ import {
   sendEmailVerification,
 } from "firebase/auth";
 import { doc, getDoc } from "firebase/firestore";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -121,9 +121,9 @@ export default function Login() {
 
         <div className="text-center text-sm text-gray-600 mt-4">
           Belum punya akun?{" "}
-          <a href="/register" className="text-yellow-600 hover:underline">
+          <Link to="/Register" className="text-yellow-600 hover:underline">
             Daftar di sini
-          </a>
+          </Link>
         </div>
 
         <div className="mt-6 flex items-center justify-center">
